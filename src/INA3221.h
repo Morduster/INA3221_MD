@@ -101,9 +101,9 @@ class INA3221 {
         uint16_t mode_shunt_en : 1;
         uint16_t mode_bus_en : 1;
         uint16_t mode_continious_en : 1;
-        uint16_t shunt_conv_time : 3;
-        uint16_t bus_conv_time : 3;
-        uint16_t avg_mode : 3;
+        uint16_t shunt_conv_time : 4;
+        uint16_t bus_conv_time : 4;
+        uint16_t avg_mode : 4;
         uint16_t ch3_en : 1;
         uint16_t ch2_en : 1;
         uint16_t ch1_en : 1;

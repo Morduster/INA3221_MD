@@ -51,9 +51,9 @@ void INA3221::_write(ina3221_reg_t reg, uint16_t *val) {
 void INA3221::begin(TwoWire *theWire) {
     _i2c = theWire;
 
-    _shuntRes[0] = 10;
-    _shuntRes[1] = 10;
-    _shuntRes[2] = 10;
+    _shuntRes[0] = 100000; // uOhm = 100 mOhm = 0.1 Ohm
+    _shuntRes[1] = 100000; // uOhm = 100 mOhm = 0.1 Ohm
+    _shuntRes[2] = 100000; // uOhm = 100 mOhm = 0.1 Ohm
 
     _filterRes[0] = 0;
     _filterRes[1] = 0;
@@ -187,7 +187,7 @@ void INA3221::setShuntSumAlertLimit(int32_t voltageuV) {
 
 void INA3221::setCurrentSumAlertLimit(int32_t currentmA) {
     int16_t shuntuV = 0;
-    shuntuV         = currentmA * (int32_t)_shuntRes[INA3221_CH1];
+    shuntuV         = currentmA * (int32_t)(_shuntRes[INA3221_CH1]) / 1000.0;
     setShuntSumAlertLimit(shuntuV);
 }
 
@@ -342,14 +342,14 @@ void INA3221::setCritAlertShuntLimit(ina3221_ch_t channel, int32_t voltageuV) {
 void INA3221::setWarnAlertCurrentLimit(ina3221_ch_t channel,
                                        int32_t currentmA) {
     int32_t shuntuV = 0;
-    shuntuV         = currentmA * (int32_t)_shuntRes[channel];
+    shuntuV         = round(currentmA * (float)(_shuntRes[channel]) / 1000.0);
     setWarnAlertShuntLimit(channel, shuntuV);
 }
 
 void INA3221::setCritAlertCurrentLimit(ina3221_ch_t channel,
                                        int32_t currentmA) {
     int32_t shuntuV = 0;
-    shuntuV         = currentmA * (int32_t)_shuntRes[channel];
+    shuntuV         = round(currentmA * (float)(_shuntRes[channel]) / 1000.0);
     setCritAlertShuntLimit(channel, shuntuV);
 }
 
@@ -450,7 +450,7 @@ int32_t INA3221::estimateOffsetVoltage(ina3221_ch_t channel, uint32_t busV) {
     float bias_in     = 10.0;   // Input bias current at IN– in uA
     float r_in        = 0.670;  // Input resistance at IN– in MOhm
     uint32_t adc_step = 40;     // smallest shunt ADC step in uV
-    float shunt_res   = _shuntRes[channel] / 1000.0;  // convert to Ohm
+    float shunt_res   = _shuntRes[channel] / 1000000.0;  // convert to Ohm
     float filter_res  = _filterRes[channel];
     int32_t offset    = 0.0;
     float reminder;
@@ -474,7 +474,7 @@ float INA3221::getCurrent(ina3221_ch_t channel) {
     float current_A  = 0;
 
     shunt_uV  = getShuntVoltage(channel);
-    current_A = shunt_uV / (int32_t)_shuntRes[channel] / 1000.0;
+    current_A = shunt_uV / ((float)_shuntRes[channel] / 1.0);
     return current_A;
 }
 
@@ -488,7 +488,7 @@ float INA3221::getCurrentCompensated(ina3221_ch_t channel) {
     bus_V     = getVoltage(channel);
     offset_uV = estimateOffsetVoltage(channel, bus_V);
 
-    current_A = (shunt_uV - offset_uV) / (int32_t)_shuntRes[channel] / 1000.0;
+    current_A = (shunt_uV - offset_uV) / ((float)_shuntRes[channel] / 1.0);
 
     return current_A;
 }
